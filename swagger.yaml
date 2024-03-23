@@ -1,0 +1,3455 @@
+openapi: 3.0.0
+info:
+  title: Lumify API
+  description: "Lumify gives you the ability to automate and optimize the management\
+    \ of your DJ and events business.  This API is available to 'Pro' users of our\
+    \ platform. Note: This is an advanced feature of Lumify and is not supported by\
+    \ Lumify Labs support. Only use this API if you have experience with integrations\
+    \ and software development. If you are not comfortable with API integrations,\
+    \ consider using our no-code options (i.e. Zapier actions). <br><br> Use of the\
+    \ API is subject to Terms:"
+  termsOfService: https://lumifylabs.com/terms/
+  contact:
+    name: Additional Resources
+    url: https://lumifylabs.com/kb/using-lumify-api
+  version: v1.2
+servers:
+- url: "https://{domain}.lumify.app/api"
+  description: Your tenant specific API endpoint
+  variables:
+    domain:
+      description: Domain assigned by the service provider
+      default: demo
+- url: https://virtserver.swaggerhub.com/lumifylabs/lumify/v1.2
+  description: SwaggerHub API Auto Mocking
+security:
+- ApiToken: []
+tags:
+- name: Users
+  description: An authenticated user of Lumify
+- name: Contacts
+  description: "An abstraction of User with related events, invoices, contracts, and\
+    \ activity log"
+- name: Events
+  description: The primary record for day-of-event details
+- name: Playlists
+  description: Song requests are organized into playlists or song request lists
+- name: Contracts
+  description: Documents which represent the agreement between a client and DJ
+- name: Invoices
+  description: Details of the services provided by DJ to client
+- name: Payments
+  description: Represents a receivable item
+- name: Expenses
+  description: Represents an payable item
+- name: Locations
+  description: Generally a venue or other physical space
+- name: Event Statuses
+  description: Label representing the status of event
+- name: Event Types
+  description: Label representing the type of event
+- name: Packages
+  description: Single billable items that represent a group of services provided
+- name: Addons
+  description: "Additional billable items that can be added to an event, contract,\
+    \ or invoice"
+- name: Webhooks
+  description: A webhook can be used to trigger automations in Lumify
+paths:
+  /me:
+    get:
+      tags:
+      - Users
+      summary: Get the currently authenticated user
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      tags:
+      - Users
+      summary: Update the currently authenticated user's profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/me_body'
+            example:
+              name: John Doe
+              email: user@example.net
+              roles:
+              - Administrator
+              - Manager
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /contact:
+    get:
+      tags:
+      - Contacts
+      summary: Get a paginated list of contacts
+      parameters:
+      - name: page
+        in: query
+        description: The requested page number
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 1
+      - name: itemsPerPage
+        in: query
+        description: The number of items to include per page
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 10
+      - name: sortBy
+        in: query
+        description: The column used to sort the results
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: sortDesc
+        in: query
+        description: Whether to sort the column in descending order
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          default: false
+      - name: search
+        in: query
+        description: The search string searches multiple columns depending on resource
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: "filter[]"
+        in: query
+        description: Filter the results on the value of columns
+        required: false
+        style: deepObject
+        explode: false
+        schema:
+          type: string
+        example: "?filter[color]=blue,green,red"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+    post:
+      tags:
+      - Contacts
+      summary: Create a new contact
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/contact_body'
+            example:
+              email: user@example.net
+              name: John Doe
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+  /contact/{contact_id}:
+    get:
+      tags:
+      - Contacts
+      summary: Get a single contact
+      parameters:
+      - name: contact_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+    put:
+      tags:
+      - Contacts
+      summary: Update a contact
+      parameters:
+      - name: contact_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contact'
+            example:
+              name: John Doe
+              email: user@example.net
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+    delete:
+      tags:
+      - Contacts
+      summary: Delete a contact
+      parameters:
+      - name: contact_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "204":
+          description: No content
+  /contact/{contact_id}/invite:
+    post:
+      tags:
+      - Contacts
+      summary: Send contact invite email
+      parameters:
+      - name: contact_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+  /event:
+    get:
+      tags:
+      - Events
+      summary: Get a paginated list of events
+      parameters:
+      - name: page
+        in: query
+        description: The requested page number
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 1
+      - name: itemsPerPage
+        in: query
+        description: The number of items to include per page
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 10
+      - name: sortBy
+        in: query
+        description: The column used to sort the results
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: sortDesc
+        in: query
+        description: Whether to sort the column in descending order
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          default: false
+      - name: search
+        in: query
+        description: The search string searches multiple columns depending on resource
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: "filter[]"
+        in: query
+        description: Filter the results on the value of columns
+        required: false
+        style: deepObject
+        explode: false
+        schema:
+          type: string
+        example: "?filter[color]=blue,green,red"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_1'
+    post:
+      tags:
+      - Events
+      summary: Create an event
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/event_body'
+            example:
+              title: John Doe's Birthday Party
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+  /event/{event_id}:
+    get:
+      tags:
+      - Events
+      summary: Get a single event
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+    put:
+      tags:
+      - Events
+      summary: Update an event
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/event_event_id_body'
+            example:
+              title: John Doe's Birthday Party
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+    delete:
+      tags:
+      - Events
+      summary: Delete an event
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No content
+  /event/{event_id}/documents:
+    get:
+      tags:
+      - Events
+      summary: Get published document for single event
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/inline_response_200_2'
+  /event/{event_id}/planning-form/{planning_form_id}:
+    post:
+      tags:
+      - Events
+      summary: Attach a planning form to event
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      - name: planning_form_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanningFormResponse'
+    delete:
+      tags:
+      - Events
+      summary: Remove a planning form from event
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      - name: planning_form_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No content
+  /event/{event_id}/playlist:
+    post:
+      tags:
+      - Playlists
+      summary: Create request playlist
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/event_id_playlist_body'
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+  /event/{event_id}/playlist/{playlist_id}:
+    get:
+      tags:
+      - Playlists
+      summary: Get a request playlist
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      - name: playlist_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+    put:
+      tags:
+      - Playlists
+      summary: Update a request playlist
+      parameters:
+      - name: playlist_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: event_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Playlist'
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+    delete:
+      tags:
+      - Playlists
+      summary: Delete a request playlist
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      - name: playlist_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "204":
+          description: No content
+  /event/{event_id}/playlist/{playlist_id}/import:
+    post:
+      tags:
+      - Playlists
+      summary: Import tracks into request playlist
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      - name: playlist_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/playlist_id_import_body'
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+  /event/{event_id}/playlist/{playlist_id}/song/{track_id}:
+    put:
+      tags:
+      - Playlists
+      summary: Add a track to request playlist
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      - name: playlist_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: track_id
+        in: path
+        description: Spotify Track ID
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+        example: 4cOdK2wGLETKBW3PvgPWqT
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/song_track_id_body'
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+    delete:
+      tags:
+      - Playlists
+      summary: Remove a track from request playlist
+      description: Send the Spotify Track ID in the body parameter "ID" to remove
+        track from playlist
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      - name: playlist_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: track_id
+        in: path
+        description: Lumify Track ID
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+        example: 123
+      responses:
+        "204":
+          description: No content
+  /location:
+    get:
+      tags:
+      - Locations
+      summary: Get a paginated list of locations
+      parameters:
+      - name: page
+        in: query
+        description: The requested page number
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 1
+      - name: itemsPerPage
+        in: query
+        description: The number of items to include per page
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 10
+      - name: sortBy
+        in: query
+        description: The column used to sort the results
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: sortDesc
+        in: query
+        description: Whether to sort the column in descending order
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          default: false
+      - name: search
+        in: query
+        description: The search string searches multiple columns depending on resource
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: "filter[]"
+        in: query
+        description: Filter the results on the value of columns
+        required: false
+        style: deepObject
+        explode: false
+        schema:
+          type: string
+        example: "?filter[color]=blue,green,red"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_3'
+    post:
+      tags:
+      - Locations
+      summary: Create a location
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/location_body'
+            example:
+              title: Grand Ballroom
+              address: 123 Main Street
+              city: Chicago
+              state: IL
+              zip_code: 60601
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+  /location/{location_id}:
+    get:
+      tags:
+      - Locations
+      summary: Get a single location
+      parameters:
+      - name: location_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+    put:
+      tags:
+      - Locations
+      summary: Update a location
+      parameters:
+      - name: location_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Location'
+            example:
+              title: Grand Ballroom
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+    delete:
+      tags:
+      - Locations
+      summary: Delete a location
+      parameters:
+      - name: location_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "204":
+          description: No content
+  /payment:
+    get:
+      tags:
+      - Payments
+      summary: Get a paginated list of payments
+      parameters:
+      - name: page
+        in: query
+        description: The requested page number
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 1
+      - name: itemsPerPage
+        in: query
+        description: The number of items to include per page
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 10
+      - name: sortBy
+        in: query
+        description: The column used to sort the results
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: sortDesc
+        in: query
+        description: Whether to sort the column in descending order
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          default: false
+      - name: search
+        in: query
+        description: The search string searches multiple columns depending on resource
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: "filter[]"
+        in: query
+        description: Filter the results on the value of columns
+        required: false
+        style: deepObject
+        explode: false
+        schema:
+          type: string
+        example: "?filter[color]=blue,green,red"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_4'
+    post:
+      tags:
+      - Payments
+      summary: Create a payment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/payment_body'
+            example:
+              amount: 300
+              payor_id: 0
+              method: CASH
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+  /payment/{payment_id}:
+    get:
+      tags:
+      - Payments
+      summary: Get a single payment
+      parameters:
+      - name: payment_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_4'
+    put:
+      tags:
+      - Payments
+      summary: Update a payment
+      parameters:
+      - name: payment_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Payment'
+            example:
+              refund_amount: 100
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+  /expense:
+    get:
+      tags:
+      - Expenses
+      summary: Get a paginated list of expenses
+      parameters:
+      - name: page
+        in: query
+        description: The requested page number
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 1
+      - name: itemsPerPage
+        in: query
+        description: The number of items to include per page
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 10
+      - name: sortBy
+        in: query
+        description: The column used to sort the results
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: sortDesc
+        in: query
+        description: Whether to sort the column in descending order
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          default: false
+      - name: search
+        in: query
+        description: The search string searches multiple columns depending on resource
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: "filter[]"
+        in: query
+        description: Filter the results on the value of columns
+        required: false
+        style: deepObject
+        explode: false
+        schema:
+          type: string
+        example: "?filter[color]=blue,green,red"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_5'
+    post:
+      tags:
+      - Expenses
+      summary: Create an expense
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/expense_body'
+            example:
+              amount: 300
+              event_id: 04b21ddf-9e6d-4503-ac9a-2f250ba29396
+              type: equipment_rental
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+  /expense/{expense_id}:
+    get:
+      tags:
+      - Expenses
+      summary: Get a single expense
+      parameters:
+      - name: expense_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_5'
+    put:
+      tags:
+      - Expenses
+      summary: Update an expense
+      parameters:
+      - name: expense_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Expense'
+            example:
+              amount: 500
+              type: education_conferences
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+    delete:
+      tags:
+      - Expenses
+      summary: Delete an expense
+      parameters:
+      - name: expense_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "204":
+          description: No content
+  /contract:
+    get:
+      tags:
+      - Contracts
+      summary: Get a paginated list of contracts
+      parameters:
+      - name: page
+        in: query
+        description: The requested page number
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 1
+      - name: itemsPerPage
+        in: query
+        description: The number of items to include per page
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 10
+      - name: sortBy
+        in: query
+        description: The column used to sort the results
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: sortDesc
+        in: query
+        description: Whether to sort the column in descending order
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          default: false
+      - name: search
+        in: query
+        description: The search string searches multiple columns depending on resource
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: "filter[]"
+        in: query
+        description: Filter the results on the value of columns
+        required: false
+        style: deepObject
+        explode: false
+        schema:
+          type: string
+        example: "?filter[color]=blue,green,red"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_6'
+  /contract/draft:
+    post:
+      tags:
+      - Contracts
+      summary: Create a contract
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contract'
+            example: {}
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contract'
+  /contract/{contract_id}:
+    get:
+      tags:
+      - Contracts
+      summary: Get a single contract
+      parameters:
+      - name: contract_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contract'
+    put:
+      tags:
+      - Contracts
+      summary: Update a contract
+      parameters:
+      - name: contract_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contract'
+            example:
+              events:
+              - 04b21ddf-9e6d-4503-ac9a-2f250ba29396
+              template_id: 5
+              taxes:
+              - discountable: false
+                label: Cook County Sales Tax
+                percent: 10.25
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contract'
+    delete:
+      tags:
+      - Contracts
+      summary: Delete a draft contract
+      parameters:
+      - name: contract_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No content
+  /contract/{contract_id}/sign:
+    post:
+      tags:
+      - Contracts
+      summary: Sign a contract
+      parameters:
+      - name: contract_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/contract_id_sign_body'
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contract'
+  /contract/{contract_id}/validate-signature/{hash}:
+    get:
+      tags:
+      - Contracts
+      summary: Validate a contract's signature hash
+      parameters:
+      - name: contract_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      - name: hash
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_7'
+  /invoice:
+    get:
+      tags:
+      - Invoices
+      summary: Get a paginated list of invoices
+      parameters:
+      - name: page
+        in: query
+        description: The requested page number
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 1
+      - name: itemsPerPage
+        in: query
+        description: The number of items to include per page
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 10
+      - name: sortBy
+        in: query
+        description: The column used to sort the results
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: sortDesc
+        in: query
+        description: Whether to sort the column in descending order
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          default: false
+      - name: search
+        in: query
+        description: The search string searches multiple columns depending on resource
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: "filter[]"
+        in: query
+        description: Filter the results on the value of columns
+        required: false
+        style: deepObject
+        explode: false
+        schema:
+          type: string
+        example: "?filter[color]=blue,green,red"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_8'
+  /invoice/draft:
+    post:
+      tags:
+      - Invoices
+      summary: Create an invoice
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Invoice'
+            example: {}
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+  /invoice/{invoice_id}:
+    get:
+      tags:
+      - Invoices
+      summary: Get a single invoice
+      parameters:
+      - name: invoice_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+    put:
+      tags:
+      - Invoices
+      summary: Update an invoice
+      parameters:
+      - name: invoice_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Invoice'
+            example:
+              billing_method: EVENT
+              events:
+              - 04b21ddf-9e6d-4503-ac9a-2f250ba29396
+              template_id: 5
+              taxes:
+              - discountable: false
+                label: Cook County Sales Tax
+                percent: 10.25
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+    delete:
+      tags:
+      - Invoices
+      summary: Delete a draft invoice
+      parameters:
+      - name: invoice_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No content
+  /event-status:
+    get:
+      tags:
+      - Event Statuses
+      summary: Get a list of event statuses
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_9'
+    post:
+      tags:
+      - Event Statuses
+      summary: Create an event status
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/eventstatus_body'
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventStatus'
+  /event-status/{event_status_id}:
+    put:
+      tags:
+      - Event Statuses
+      summary: Update an event status
+      parameters:
+      - name: event_status_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventStatus'
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventStatus'
+    delete:
+      tags:
+      - Event Statuses
+      summary: Delete an event status
+      parameters:
+      - name: event_status_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "204":
+          description: No content
+  /event-type:
+    get:
+      tags:
+      - Event Types
+      summary: Get a list of event types
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_10'
+    post:
+      tags:
+      - Event Types
+      summary: Create an event type
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/eventtype_body'
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+  /event-type/{event_type_id}:
+    put:
+      tags:
+      - Event Types
+      summary: Update an event type
+      parameters:
+      - name: event_type_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventType'
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+    delete:
+      tags:
+      - Event Types
+      summary: Delete an event type
+      parameters:
+      - name: event_type_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "204":
+          description: No content
+  /package:
+    get:
+      tags:
+      - Packages
+      summary: Get a list of packages
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_11'
+    post:
+      tags:
+      - Packages
+      summary: Create a package
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/package_body'
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Package'
+  /package/{package_id}:
+    put:
+      tags:
+      - Packages
+      summary: Update a package
+      parameters:
+      - name: package_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Package'
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Package'
+    delete:
+      tags:
+      - Packages
+      summary: Delete a package
+      parameters:
+      - name: package_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "204":
+          description: No content
+  /addon:
+    get:
+      tags:
+      - Addons
+      summary: Get a list of addons
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_12'
+    post:
+      tags:
+      - Addons
+      summary: Create an addon
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addon_body'
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Addon'
+  /addon/{addon_id}:
+    put:
+      tags:
+      - Addons
+      summary: Update an addon
+      parameters:
+      - name: addon_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Addon'
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Addon'
+    delete:
+      tags:
+      - Addons
+      summary: Delete an addon
+      parameters:
+      - name: addon_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "204":
+          description: No content
+  /automation/{automation_id}/webhook:
+    put:
+      tags:
+      - Webhooks
+      summary: Trigger a webhook automation
+      description: (Optionally can send a POST request)
+      externalDocs:
+        url: https://lumifylabs.com/kb/webhook-automations/
+      parameters:
+      - name: automation_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example: {}
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              example: {}
+        required: true
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                example: {}
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                example: {}
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        email:
+          type: string
+          format: email
+        email_verified_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          example: John Doe
+        address:
+          type: string
+        city:
+          type: string
+        phone:
+          type: string
+        state:
+          type: string
+        suite:
+          type: string
+        zip_code:
+          type: string
+        notes:
+          type: string
+        roles:
+          type: array
+          example:
+          - Super User
+          - Manager
+          items:
+            type: string
+        permissions:
+          type: array
+          readOnly: true
+          example:
+          - client_portal_view_timeline
+          - admin_create_invoices
+          items:
+            type: string
+        timezone:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        activity_log:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/ActivityLog'
+          x-collapsed: true
+        addons:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Addon'
+          x-collapsed: true
+        appointments:
+          type: array
+          readOnly: true
+          items:
+            type: object
+            properties: {}
+        attachments:
+          type: array
+          readOnly: true
+          items:
+            type: object
+            properties: {}
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventUser'
+          x-collapsed: true
+        contracts:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Contract'
+          x-collapsed: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+        created_by_id:
+          type: integer
+          readOnly: true
+        date:
+          type: string
+          format: date
+        date_end:
+          type: string
+          format: date
+        event_status:
+          allOf:
+          - $ref: '#/components/schemas/EventStatus'
+          - readOnly: true
+          x-collapsed: true
+        event_status_id:
+          type: integer
+        event_type:
+          allOf:
+          - $ref: '#/components/schemas/EventType'
+          - readOnly: true
+          x-collapsed: true
+        event_type_id:
+          type: integer
+        expenses:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Expense'
+          x-collapsed: true
+        invoices:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Invoice'
+          x-collapsed: true
+        location:
+          allOf:
+          - $ref: '#/components/schemas/Location'
+          - readOnly: true
+          x-collapsed: true
+        location_id:
+          type: integer
+        notes:
+          type: string
+        num_guests:
+          type: integer
+        package:
+          allOf:
+          - $ref: '#/components/schemas/Package'
+          - readOnly: true
+          x-collapsed: true
+        package_id:
+          type: integer
+        planning_forms:
+          type: array
+          readOnly: true
+          items:
+            type: object
+            properties: {}
+        playlists:
+          type: array
+          readOnly: true
+          items:
+            type: object
+            properties: {}
+        readonly:
+          type: boolean
+        related:
+          type: array
+          items:
+            type: integer
+        subtitle:
+          type: string
+        time:
+          type: string
+          format: time
+        timeline:
+          type: string
+        meta:
+          type: object
+          properties: {}
+          example:
+            source: Contact Form
+            paid_in_full: true
+        title:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+        updated_by_id:
+          type: integer
+          readOnly: true
+    Contact:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        address:
+          type: string
+          example: 123 Main Street
+        address_full:
+          type: string
+          example: |-
+            123 Main Street
+            Chicago, Illinois 60601
+        city:
+          type: string
+          example: Chicago
+        contact_types:
+          type: array
+          example:
+          - Client
+          - Disc Jockey
+          - Bartender
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+        email:
+          type: string
+          format: email
+        email_verified_at:
+          type: string
+          format: date-time
+          readOnly: true
+        events:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Event'
+          x-collapsed: true
+        invited_at:
+          type: string
+          format: date-time
+        name:
+          type: string
+          example: John Doe
+        notes:
+          type: string
+        roles:
+          type: array
+          example:
+          - Super User
+          - Manager
+          items:
+            type: string
+        permissions:
+          type: array
+          readOnly: true
+          example:
+          - client_portal_view_timeline
+          - admin_create_invoices
+          items:
+            type: string
+        phone:
+          type: string
+        state:
+          type: string
+          example: IL
+        suite:
+          type: string
+        tags:
+          type: array
+          example:
+          - Lead
+          - Client
+          - Subscribed to email
+          items:
+            type: string
+        timezone:
+          type: string
+        activity_log:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/ActivityLog'
+          x-collapsed: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+        zip_code:
+          type: string
+          example: "60601"
+    Location:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        address:
+          type: string
+          example: 123 Main Street
+        address_full:
+          type: string
+          example: |-
+            123 Main Street
+            Chicago, Illinois 60601
+        city:
+          type: string
+          example: Chicago
+        contact_person:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+        contact_person_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+        created_by_id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+          x-collapsed: true
+        name:
+          type: string
+          example: Grand Ballroom
+        notes:
+          type: string
+        phone:
+          type: string
+        state:
+          type: string
+          example: IL
+        suite:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+        updated_by_id:
+          type: integer
+          readOnly: true
+        zip_code:
+          type: integer
+          example: 60601
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        bill_to:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+        bill_to_id:
+          type: integer
+        billable_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Invoice_billable_items_1'
+        billing_method:
+          type: string
+          enum:
+          - CONTRACT
+          - EVENT
+          - CUSTOM
+        blank:
+          type: string
+          readOnly: true
+          example: ""
+        cancelled_at:
+          type: string
+          format: date-time
+          readOnly: true
+        contract_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+        deposit_amount:
+          type: integer
+          readOnly: true
+        deposit_due_at:
+          type: string
+          format: date-time
+        deposit_percent:
+          type: integer
+        discount_amount:
+          type: integer
+        due_at:
+          type: string
+          format: date-time
+        events:
+          type: array
+          items:
+            type: string
+            format: uuid
+        footer:
+          type: string
+          readOnly: true
+        invoice_num:
+          type: integer
+          readOnly: true
+          example: 101
+        meta:
+          $ref: '#/components/schemas/Invoice_meta'
+        notes:
+          type: string
+          example: Thank you for your business!
+        paid_amount:
+          type: integer
+          readOnly: true
+        paid_at:
+          type: string
+          format: date-time
+          readOnly: true
+        paid_in_full:
+          type: boolean
+          readOnly: true
+        payments:
+          type: array
+          readOnly: true
+          items:
+            type: object
+        quote_at:
+          type: string
+          format: date-time
+          readOnly: true
+        remaining_balance_amount:
+          type: integer
+          readOnly: true
+        outstanding_balance_amount:
+          type: integer
+          readOnly: true
+        sent_at:
+          type: string
+          format: date-time
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+        sub_total_amount:
+          type: integer
+          readOnly: true
+        taxes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Invoice_taxes'
+        taxes_collected:
+          type: integer
+          readOnly: true
+        template:
+          $ref: '#/components/schemas/Invoice_template'
+        template_id:
+          type: integer
+        total_amount:
+          type: integer
+          readOnly: true
+        total_taxes_amount:
+          type: integer
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+        viewed_at:
+          type: string
+          format: date-time
+          readOnly: true
+    Contract:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        blank:
+          type: string
+          readOnly: true
+          example: _____________
+        cancelled_at:
+          type: string
+          format: date-time
+          readOnly: true
+        contract_num:
+          type: integer
+          readOnly: true
+          example: 101
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+        created_by_id:
+          type: integer
+          readOnly: true
+        deposit_amount:
+          type: integer
+          readOnly: true
+        deposit_due_at:
+          type: string
+          format: date-time
+          readOnly: true
+        deposit_due_offset:
+          type: integer
+        deposit_percent:
+          type: integer
+        discount_amount:
+          type: integer
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+          x-collapsed: true
+        meta:
+          $ref: '#/components/schemas/Invoice_meta'
+        remaining_balance_amount:
+          type: integer
+          readOnly: true
+        sent_at:
+          type: string
+          format: date-time
+          readOnly: true
+        signed_at:
+          type: string
+          format: date-time
+          readOnly: true
+        signed_hash:
+          type: string
+          readOnly: true
+        signers:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/User'
+            - type: object
+              properties:
+                signed:
+                  type: boolean
+                  example: false
+                signature:
+                  type: object
+                  properties:
+                    signed_at:
+                      type: string
+                      format: date-time
+                    name:
+                      type: string
+                    address:
+                      type: string
+                    ip:
+                      type: string
+                    user_agent:
+                      type: string
+        status:
+          type: string
+          readOnly: true
+        sub_total_amount:
+          type: integer
+          readOnly: true
+        taxes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Invoice_taxes'
+        template:
+          $ref: '#/components/schemas/Invoice_template'
+        template_id:
+          type: integer
+        total_amount:
+          type: integer
+          readOnly: true
+        total_amount_due_at:
+          type: string
+          readOnly: true
+        total_amount_due_offset:
+          type: integer
+        total_taxes_amount:
+          type: integer
+          readOnly: true
+        updated_at:
+          type: string
+          readOnly: true
+        updated_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+        updated_by_id:
+          type: integer
+          readOnly: true
+        viewed_at:
+          type: string
+          format: date-time
+          readOnly: true
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        amount:
+          type: number
+        amount_refunded:
+          type: number
+          readOnly: true
+        refund_amount:
+          type: number
+          writeOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+        events:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Event'
+          x-collapsed: true
+        invoice:
+          allOf:
+          - $ref: '#/components/schemas/Invoice'
+          - readOnly: true
+          x-collapsed: true
+        invoice_id:
+          type: string
+          format: uuid
+        method:
+          type: string
+          enum:
+          - STRIPE
+          - CASHAPP
+          - PAYPAL
+          - VENMO
+          - ZELLE
+          - CHECK
+          - CARD
+          - CASH
+          - TRANSFER
+          - OTHER
+        notes:
+          type: string
+        payor:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+        payor_id:
+          type: integer
+        payor_name:
+          type: string
+          readOnly: true
+        paypal_id:
+          type: string
+          readOnly: true
+        refunds:
+          type: array
+          readOnly: true
+          items: {}
+        stripe_id:
+          type: string
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+    Expense:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        amount:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+        event:
+          allOf:
+          - $ref: '#/components/schemas/Event'
+          - readOnly: true
+          x-collapsed: true
+        event_id:
+          type: string
+          format: uuid
+        notes:
+          type: string
+        type:
+          type: string
+          enum:
+          - mileage
+          - fuel
+          - airfare
+          - train
+          - car_rental
+          - rideshare
+          - lodging_hotel
+          - meals
+          - toll
+          - parking
+          - travel_other
+          - equipment_rental
+          - employee_wages
+          - office_rental
+          - utilities_internet
+          - insurance
+          - legal_fees
+          - equipment_repairs
+          - office_supplies
+          - frieght_shipping_postage
+          - education_conferences
+          - professional_dues
+          - advertising_marketing
+          - software_licenses
+          - operational_other
+          - equipment_purchase
+          - music_record_pool
+          - software_purchase
+          - building_land_real_estate
+          - vehicle_purchase
+          - capital_other
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+    Playlist:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        color:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by_id:
+          type: integer
+          readOnly: true
+        default:
+          type: boolean
+          readOnly: true
+        event_id:
+          type: string
+          format: uuid
+          readOnly: true
+        event_title:
+          type: string
+          readOnly: true
+        notes:
+          type: string
+        songs:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Playlist_songs'
+        songs_count:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+        token:
+          type: string
+          readOnly: true
+        token_url:
+          type: string
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_by_id:
+          type: integer
+          readOnly: true
+    Package:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        cost:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by_id:
+          type: integer
+          readOnly: true
+        description:
+          type: string
+        event_types:
+          type: array
+          items: {}
+        features:
+          type: array
+          items:
+            type: string
+        image:
+          type: string
+        label:
+          type: string
+        limited:
+          type: boolean
+        taxable:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_by_id:
+          type: integer
+          readOnly: true
+    Addon:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        cost:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by_id:
+          type: integer
+          readOnly: true
+        description:
+          type: string
+        image:
+          type: string
+        label:
+          type: string
+        limited:
+          type: boolean
+        packages:
+          type: array
+          items: {}
+        taxable:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_by_id:
+          type: integer
+          readOnly: true
+    EventType:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        color:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        defaults:
+          $ref: '#/components/schemas/EventType_defaults'
+        label:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    EventStatus:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        color:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        default:
+          type: boolean
+          readOnly: true
+        label:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    ActivityLog:
+      type: object
+      properties:
+        actor:
+          $ref: '#/components/schemas/User'
+        actor_id:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        event:
+          $ref: '#/components/schemas/Event'
+        event_id:
+          type: string
+          format: uuid
+          readOnly: true
+        id:
+          type: integer
+          readOnly: true
+        loggable_event:
+          type: string
+          readOnly: true
+          example: event_created_via_contact_form
+        loggable_id:
+          readOnly: true
+          example: 1
+        loggable_type:
+          type: string
+          readOnly: true
+          example: App\Domain\Event\Event
+        meta:
+          type: object
+          properties: {}
+          readOnly: true
+        target:
+          type: object
+          properties: {}
+          readOnly: true
+        target_id:
+          type: integer
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    EventUser:
+      type: object
+      properties:
+        contact_type:
+          allOf:
+          - $ref: '#/components/schemas/ContactType'
+          - readOnly: true
+          x-collapsed: true
+        contact_type_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by_id:
+          type: integer
+          readOnly: true
+        event_id:
+          type: string
+          format: uuid
+          readOnly: true
+        id:
+          type: integer
+          readOnly: true
+        notes:
+          type: string
+        updated_by_id:
+          type: integer
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          - readOnly: true
+          x-collapsed: true
+        user_id:
+          type: integer
+    ContactType:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        label:
+          type: string
+          readOnly: true
+    PlanningFormResponse:
+      type: object
+      properties:
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        id:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          format: date-time
+          readOnly: true
+        options:
+          type: string
+          format: date-time
+          readOnly: true
+        planning_form_id:
+          type: string
+          format: date-time
+          readOnly: true
+        response:
+          type: string
+          format: date-time
+          readOnly: true
+        schema:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/PlanningFormResponse_schema'
+        schema_response:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/PlanningFormResponse_schema'
+        updated_at:
+          type: string
+    Wrapped:
+      type: object
+      properties:
+        data:
+          type: array
+          items: {}
+      x-internal: true
+    Paginated:
+      type: object
+      properties:
+        data:
+          type: array
+          items: {}
+        links:
+          $ref: '#/components/schemas/Paginated_links'
+        meta:
+          $ref: '#/components/schemas/Paginated_meta'
+      x-internal: true
+    me_body:
+      allOf:
+      - $ref: '#/components/schemas/User'
+      - type: object
+        properties:
+          password:
+            type: string
+          current_password:
+            type: string
+    inline_response_200:
+      allOf:
+      - $ref: '#/components/schemas/Paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/Contact'
+    contact_body:
+      allOf:
+      - $ref: '#/components/schemas/Contact'
+      - required:
+        - email
+        - name
+        type: object
+        properties:
+          email:
+            type: string
+            format: email
+    inline_response_200_1:
+      allOf:
+      - $ref: '#/components/schemas/Paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/Event'
+    event_body:
+      allOf:
+      - $ref: '#/components/schemas/Event'
+      - required:
+        - email
+        type: object
+        properties:
+          email:
+            type: string
+            format: email
+    event_event_id_body:
+      allOf:
+      - $ref: '#/components/schemas/Event'
+      - type: object
+        properties:
+          addons:
+            type: array
+            readOnly: false
+            writeOnly: true
+            example:
+            - 1
+            - 2
+            - 3
+            items:
+              type: integer
+    eventevent_iddocuments_template:
+      type: object
+      properties:
+        id:
+          type: integer
+        template_type:
+          type: string
+          example: INVOICE
+        title:
+          type: string
+    inline_response_200_2:
+      type: object
+      properties:
+        body:
+          allOf:
+          - $ref: '#/components/schemas/Invoice'
+          - readOnly: true
+          x-collapsed: true
+        id:
+          type: string
+          format: uuid
+        sent_at:
+          type: string
+          format: date-time
+          readOnly: true
+        template:
+          $ref: '#/components/schemas/eventevent_iddocuments_template'
+        template_id:
+          type: integer
+    event_id_playlist_body:
+      allOf:
+      - $ref: '#/components/schemas/Playlist'
+      - required:
+        - title
+        type: object
+        properties:
+          title:
+            type: string
+    playlist_id_import_body:
+      required:
+      - playlist_url
+      type: object
+      properties:
+        playlist_url:
+          type: string
+          description: Spotify Playlist URL or ID
+    song_track_id_body:
+      required:
+      - id
+      type: object
+      properties:
+        id:
+          type: string
+          description: Spotify Track ID
+    inline_response_200_3:
+      allOf:
+      - $ref: '#/components/schemas/Paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/Location'
+    location_body:
+      allOf:
+      - $ref: '#/components/schemas/Location'
+      - required:
+        - title
+        type: object
+        properties:
+          title:
+            type: string
+    inline_response_200_4:
+      allOf:
+      - $ref: '#/components/schemas/Paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/Payment'
+    payment_body:
+      allOf:
+      - $ref: '#/components/schemas/Payment'
+      - required:
+        - amout
+        type: object
+        properties:
+          amount:
+            type: integer
+    inline_response_200_5:
+      allOf:
+      - $ref: '#/components/schemas/Paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/Expense'
+    expense_body:
+      allOf:
+      - $ref: '#/components/schemas/Expense'
+      - required:
+        - amount
+        type: object
+        properties:
+          amount:
+            type: integer
+    inline_response_200_6:
+      allOf:
+      - $ref: '#/components/schemas/Paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/Contract'
+    contract_id_sign_body:
+      required:
+      - signed_by_id
+      - signed_by_name
+      type: object
+      properties:
+        signed_by_id:
+          type: integer
+          example: 1
+        signed_by_name:
+          type: string
+          example: John Smith
+        signed_by_address:
+          type: string
+          example: 123 main street
+    inline_response_200_7:
+      type: object
+      properties:
+        valid_hash:
+          type: boolean
+          example: true
+    inline_response_200_8:
+      allOf:
+      - $ref: '#/components/schemas/Paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/Invoice'
+    inline_response_200_9:
+      allOf:
+      - $ref: '#/components/schemas/Wrapped'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/EventStatus'
+    eventstatus_body:
+      allOf:
+      - $ref: '#/components/schemas/EventStatus'
+      - required:
+        - label
+        type: object
+        properties:
+          label:
+            type: string
+    inline_response_200_10:
+      allOf:
+      - $ref: '#/components/schemas/Wrapped'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/EventType'
+    eventtype_body:
+      allOf:
+      - $ref: '#/components/schemas/EventType'
+      - required:
+        - label
+        type: object
+        properties:
+          label:
+            type: string
+    inline_response_200_11:
+      allOf:
+      - $ref: '#/components/schemas/Wrapped'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/Package'
+    package_body:
+      allOf:
+      - $ref: '#/components/schemas/Package'
+      - required:
+        - cost
+        - label
+        type: object
+        properties:
+          label:
+            type: string
+          cost:
+            type: integer
+    inline_response_200_12:
+      allOf:
+      - $ref: '#/components/schemas/Wrapped'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/Addon'
+    addon_body:
+      allOf:
+      - $ref: '#/components/schemas/Addon'
+      - required:
+        - cost
+        - label
+        type: object
+        properties:
+          label:
+            type: string
+          cost:
+            type: integer
+    Invoice_billable_items:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Gold Package
+        cost:
+          type: integer
+          example: 2000
+        taxable:
+          type: boolean
+          example: false
+    Invoice_billable_items_1:
+      type: object
+      properties:
+        group_title:
+          type: string
+          example: Fancy Event
+        billable_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Invoice_billable_items'
+    Invoice_meta:
+      type: object
+      properties:
+        locale:
+          type: string
+          example: en_US
+        currency:
+          type: string
+          example: USD
+        timezone:
+          type: string
+          example: US/Central
+      readOnly: true
+    Invoice_taxes:
+      type: object
+      properties:
+        label:
+          type: string
+        percent:
+          type: integer
+        discountable:
+          type: boolean
+        cost:
+          type: integer
+          readOnly: true
+    Invoice_template:
+      type: object
+      properties:
+        id:
+          type: integer
+        template_type:
+          type: string
+        title:
+          type: string
+      readOnly: true
+    Playlist_songs:
+      type: object
+      properties:
+        track:
+          type: string
+          readOnly: true
+        spotify_id:
+          type: string
+          readOnly: true
+        artist:
+          type: string
+          readOnly: true
+        album:
+          type: string
+          readOnly: true
+        bpm:
+          type: integer
+          readOnly: true
+        year:
+          type: integer
+          readOnly: true
+        preview_url:
+          type: string
+          format: url
+          readOnly: true
+    EventType_defaults_playlists:
+      type: object
+      properties:
+        color:
+          type: string
+        title:
+          type: string
+        spotify_url:
+          type: string
+    EventType_defaults_timeline:
+      type: object
+      properties:
+        title:
+          type: string
+        offset:
+          type: integer
+    EventType_defaults:
+      type: object
+      properties:
+        notes:
+          type: string
+        planning_forms:
+          type: array
+          items: {}
+        playlists:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventType_defaults_playlists'
+        timeline:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventType_defaults_timeline'
+    PlanningFormResponse_schema:
+      type: object
+      properties:
+        id:
+          type: string
+        col:
+          type: integer
+        type:
+          type: string
+        label:
+          type: string
+    Paginated_links:
+      type: object
+      properties:
+        first:
+          type: string
+          format: url
+        last:
+          type: string
+          format: url
+        next:
+          type: string
+          format: url
+        prev:
+          type: string
+          format: url
+    Paginated_meta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        last_page:
+          type: integer
+        path:
+          type: string
+          format: url
+        per_page:
+          type: integer
+        total:
+          type: integer
+  responses:
+    UnauthenticatedError:
+      description: Access token is missing or invalid (401)
+    UnauthorizedError:
+      description: Access token is missing or invalid (403)
+    NotFoundError:
+      description: Requested resource not found (404)
+  parameters:
+    page:
+      name: page
+      in: query
+      description: The requested page number
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: integer
+        default: 1
+    itemsPerPage:
+      name: itemsPerPage
+      in: query
+      description: The number of items to include per page
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: integer
+        default: 10
+    sortBy:
+      name: sortBy
+      in: query
+      description: The column used to sort the results
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+    sortDesc:
+      name: sortDesc
+      in: query
+      description: Whether to sort the column in descending order
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: boolean
+        default: false
+    search:
+      name: search
+      in: query
+      description: The search string searches multiple columns depending on resource
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+    filter:
+      name: "filter[]"
+      in: query
+      description: Filter the results on the value of columns
+      required: false
+      style: deepObject
+      explode: false
+      schema:
+        type: string
+      example: "?filter[color]=blue,green,red"
+  securitySchemes:
+    ApiToken:
+      type: http
+      scheme: bearer
